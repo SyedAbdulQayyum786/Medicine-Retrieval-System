@@ -35,7 +35,6 @@ def spell_check(text):
         corrected_text.append(spell.correction(word) if word in misspelled else word)
 
     return ' '.join(corrected_text)
-
 def preprocess_text(text):
     try:
         new_corrected = spell_check(text)
@@ -56,8 +55,6 @@ def preprocess_text(text):
     except Exception as e:
         print("Error occurred during text preprocessing:", e)
         return text  
-
-
 # Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -65,11 +62,14 @@ def index():
         # Get user input from the form
         symptoms = request.form['symptoms']
         
+        
         # Preprocess the symptoms
         preprocessed_symptoms = preprocess_text(symptoms)
+        print(preprocessed_symptoms)
         
-        # Split the preprocessed symptoms by comma
-        symptoms_list = preprocessed_symptoms.split(',')
+        # Split the preprocessed symptoms by comma with and without spaces
+        symptoms_list = [symptom.strip() for symptom in preprocessed_symptoms.split(',')]
+        print(symptoms_list)
         
         # Read the CSV file into a pandas DataFrame
         file_path = "Medicine_Details.csv" 
@@ -81,10 +81,38 @@ def index():
         # Filter DataFrame based on symptoms using AND condition
         result_df = df.copy()
         for symptom in symptoms_list:
-            result_df = result_df[result_df['Uses'].str.contains(symptom.strip(), case=False)]
+            result_df = result_df[result_df['Uses'].str.contains(symptom, case=False)]
         
-        return render_template('results.html', result=result_df.to_html())
+        # Calculate score for each medicine based on number of symptoms matched
+        result_df['Score'] = result_df['Uses'].apply(lambda x: sum(symptom in x.lower() for symptom in symptoms_list))
+        
+        # Sort the DataFrame based on score in descending order
+        result_df.sort_values(by=['Score', 'Medicine Name'], ascending=[False, True], inplace=True)
+        
+        # Retrieve top-ranked medicines
+        top_medicines = result_df.head(10)  # Retrieve top 3 medicines
+        
+        # If no medicine found, retrieve 3 medicines with individual symptoms
+        if top_medicines.empty:
+            # Reset the filter to include all medicines
+            result_df = df.copy()
+            
+            # Filter DataFrame based on individual symptoms using OR condition
+            for symptom in symptoms_list:
+                result_df = result_df[result_df['Uses'].str.contains(symptom, case=False)]
+            
+            # Calculate score for each medicine based on number of symptoms matched
+            result_df['Score'] = result_df['Uses'].apply(lambda x: sum(symptom in x.lower() for symptom in symptoms_list))
+            
+            # Sort the DataFrame based on score in descending order
+            result_df.sort_values(by=['Score', 'Medicine Name'], ascending=[False, True], inplace=True)
+            
+            # Retrieve top-ranked medicines with individual symptoms
+            top_medicines = result_df.head(3)  # Retrieve top 3 medicines
+        
+        return render_template('results.html', result=top_medicines.to_html())
     
     return render_template('index.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
