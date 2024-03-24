@@ -48,11 +48,24 @@
             background-color: #0056b3;
         }
     </style>
+    <script>
+        function validateForm() {
+            var symptoms = document.forms["symptomForm"]["symptoms"].value;
+            if (symptoms == "") {
+                alert("Symptoms field must be filled out");
+                return false;
+            }
+            if (!/^[a-zA-Z, ]+$/.test(symptoms)) {
+                alert("Symptoms can only contain letters and commas");
+                return false;
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Enter Symptoms</h1>
-        <form action="/" method="post">
+        <form name="symptomForm" action="/" method="post" onsubmit="return validateForm()">
             <input type="text" name="symptoms" placeholder="Enter symptoms...">
             <br>
             <input type="submit" value="Search">

@@ -62,24 +62,29 @@ def preprocess_text(text):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-       
+        # Get user input from the form
         symptoms = request.form['symptoms']
         
-       
+        # Preprocess the symptoms
         preprocessed_symptoms = preprocess_text(symptoms)
-
         
+        # Split the preprocessed symptoms by comma
+        symptoms_list = preprocessed_symptoms.split(',')
+        
+        # Read the CSV file into a pandas DataFrame
         file_path = "Medicine_Details.csv" 
         df = pd.read_csv(file_path, usecols=["Medicine Name", "Uses"])
-
-       
+        
+        # Preprocess the DataFrame
         df = preprocess_dataframe(df)
-
-     
-        result_df = df[df['Uses'].str.contains(preprocessed_symptoms, case=False)]
-
+        
+        # Filter DataFrame based on symptoms using AND condition
+        result_df = df.copy()
+        for symptom in symptoms_list:
+            result_df = result_df[result_df['Uses'].str.contains(symptom.strip(), case=False)]
+        
         return render_template('results.html', result=result_df.to_html())
+    
     return render_template('index.html')
-
 if __name__ == '__main__':
     app.run(debug=True)
