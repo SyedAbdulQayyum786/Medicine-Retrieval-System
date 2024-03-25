@@ -4,7 +4,7 @@ from spellchecker import SpellChecker
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, PorterStemmer
-
+import re
 app = Flask(__name__)
 
 
@@ -23,11 +23,14 @@ def preprocess_dataframe(df):
     df.drop_duplicates(inplace=True)
     return df
 def spell_check(text):
-    words = text.split()
+    words = re.split(r',|\s', text)
+    # Filter out empty strings and strip whitespace from each word
+    words = [word.strip() for word in words if word.strip()]
     print("words:", words)
     corrected_text = []
     for word in words:
         corrected_word = spell.correction(word)
+
         if corrected_word is None or corrected_word == word:
             corrected_text.append(word)
         else:
@@ -64,7 +67,7 @@ def index():
         preprocessed_symptoms = preprocess_text(symptoms)
         print("pre process= ",preprocessed_symptoms)
         
-        symptoms_list = [symptom.strip() for symptom in preprocessed_symptoms.split(',')]
+        symptoms_list = [symptom.strip() for symptom in preprocessed_symptoms.split(' ')]
         print("final sym= ",symptoms_list)
         
         file_path = "Medicine_Details.csv" 
@@ -76,7 +79,7 @@ def index():
         for symptom in symptoms_list:
             print(symptom)
             result_df = result_df[result_df['Uses'].str.contains(symptom, case=False)]
-        
+        print("result_df", result_df)
         result_df['Score'] = result_df['Uses'].apply(lambda x: sum(symptom in x.lower() for symptom in symptoms_list))
         
         result_df.sort_values(by=['Score', 'Medicine Name'], ascending=[False, True], inplace=True)
