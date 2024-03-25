@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Individual Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .medicine-list {
+            margin-top: 20px;
+        }
+        .medicine {
+            margin-bottom: 10px;
+        }
+        .medicine-name {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .medicine-uses {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Individual Results</h1>
+        {% for symptom, medicines in results.items() %}
+        <div class="medicine-list">
+            <h2>{{ loop.index }}. Medicines for Symptom: {{ symptom }}</h2>
+            {% if medicines.empty %}
+            <p>No medicines found for this symptom.</p>
+            {% else %}
+            {% for index, row in medicines.iterrows() %}
+            <div class="medicine">
+                <p class="medicine-name">{{ row['Medicine Name'] }}</p>
+                <p class="medicine-uses">{{ row['Uses'] }}</p>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
