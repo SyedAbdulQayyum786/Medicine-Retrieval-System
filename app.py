@@ -25,11 +25,9 @@ def spell_check(text):
     words = re.split(r',|\s', text)
     # Filter out empty strings and strip whitespace from each word
     words = [word.strip() for word in words if word.strip()]
-    print("words:", words)
     corrected_text = []
     for word in words:
         corrected_word = spell.correction(word)
-
         if corrected_word is None or corrected_word == word:
             corrected_text.append(word)
         else:
@@ -59,32 +57,21 @@ def search_medicines(symptoms_list, df):
     return result_df[['Medicine Name', 'Uses']].head(10)
 
 # Route for the home page
-# Route for the home page
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         symptoms = request.form['symptoms']
         preprocessed_symptoms = preprocess_text(symptoms)
-        print("pre process= ",preprocessed_symptoms)
-        
         symptoms_list = [symptom.strip() for symptom in preprocessed_symptoms.split(' ')]
-        print("final sym= ",symptoms_list)
-        
         file_path = "Medicine_Details.csv" 
         df = pd.read_csv(file_path, usecols=["Medicine Name", "Uses"])
         df = preprocess_dataframe(df)
-        
         result_df = df.copy()
         for symptom in symptoms_list:
-            print(symptom)
             result_df = result_df[result_df['Uses'].str.contains(symptom, case=False)]
-        print("result_df", result_df)
         result_df['Score'] = result_df['Uses'].apply(lambda x: sum(symptom in x.lower() for symptom in symptoms_list))
-        
         result_df.sort_values(by=['Score', 'Medicine Name'], ascending=[False, True], inplace=True)
-        
         top_medicines = result_df.head(10)  
-        
         if top_medicines.empty:
             result_df = df.copy()
             individual_medicines = {}
